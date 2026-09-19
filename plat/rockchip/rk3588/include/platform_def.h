@@ -80,6 +80,14 @@
  * Put BL3-1 at the top of the Trusted RAM
  */
 #define BL31_BASE		(TZRAM_BASE + 0x40000)
+
+/*
+ * Start of the secure DRAM carve-out reserved for BL32, where the FIT the SPL
+ * loads places it.  A property of the platform, not of any particular BL32
+ * build: it is the window the non-secure loader has to keep out of the memory
+ * map it hands the OS.  0 disables the fallback.
+ */
+#define PLAT_RK_SEC_DRAM_BASE	0x08400000
 #define BL31_LIMIT		(TZRAM_BASE + TZRAM_SIZE)
 
 /*******************************************************************************
