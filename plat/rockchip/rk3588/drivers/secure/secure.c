@@ -121,6 +121,12 @@ static void secure_region_init(void)
 	dsu_fw_rgn_config(0, 1, 0);
 	ddr_fw_rgn_config(0, 1, 0);
 
+	/* region 1: BL32 (OP-TEE) at PLAT_RK_BL32_BASE, PLAT_RK_BL32_SIZE */
+	dsu_fw_rgn_config(PLAT_RK_BL32_BASE >> 20,
+			  (PLAT_RK_BL32_BASE + PLAT_RK_BL32_SIZE) >> 20, 1);
+	ddr_fw_rgn_config(PLAT_RK_BL32_BASE >> 20,
+			  (PLAT_RK_BL32_BASE + PLAT_RK_BL32_SIZE) >> 20, 1);
+
 	/* Use FIREWALL_SYSMEM_RGN0 to config SRAM_ENTRY code(0~4k of sram) to secure */
 	sram_fw_rgn_config(0, 4, 0);
 	/* For 0xffff0000~0xffffffff, use FIREWALL_SYSMEM_RGN7 to config
