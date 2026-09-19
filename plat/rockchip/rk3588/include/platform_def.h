@@ -82,12 +82,21 @@
 #define BL31_BASE		(TZRAM_BASE + 0x40000)
 
 /*
- * Start of the secure DRAM carve-out reserved for BL32, where the FIT the SPL
- * loads places it.  A property of the platform, not of any particular BL32
- * build: it is the window the non-secure loader has to keep out of the memory
- * map it hands the OS.  0 disables the fallback.
+ * Secure DRAM carve-out reserved for BL32: a property of the platform, not of
+ * any particular BL32 build.  It is the window the non-secure loader has to
+ * keep out of the memory map it hands the OS, declared here the same way
+ * TZRAM_BASE/TZRAM_SIZE above declare BL31's.  BL31 firewalls the whole
+ * window; a BL32 of any size boots as long as it fits inside it.  0 disables
+ * both the firewall region and the entry-point fallback.
  */
 #define PLAT_RK_SEC_DRAM_BASE	0x08400000
+/*
+ * The whole 16 MiB reserved window.  A build that puts a normal-world-readable
+ * RAM console inside it, for a board whose debug UART is not reachable, has to
+ * shrink this by the size of that console: leaving the tail non-secure lets the
+ * non-secure world read whatever BL32 logs there, so it is not the default.
+ */
+#define PLAT_RK_SEC_DRAM_SIZE	0x01000000
 #define BL31_LIMIT		(TZRAM_BASE + TZRAM_SIZE)
 
 /*******************************************************************************

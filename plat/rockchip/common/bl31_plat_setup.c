@@ -21,6 +21,7 @@
 
 #ifndef PLAT_RK_SEC_DRAM_BASE
 #define PLAT_RK_SEC_DRAM_BASE	0
+#define PLAT_RK_SEC_DRAM_SIZE	0
 #endif
 
 static entry_point_info_t bl32_ep_info;
@@ -89,6 +90,22 @@ void bl31_early_platform_setup2(u_register_t arg0, u_register_t arg1,
 		bl32_ep_info.spsr = SPSR_64(MODE_EL1, MODE_SP_ELX,
 					    DISABLE_ALL_EXCEPTIONS);
 		zeromem(&bl32_ep_info.args, sizeof(bl32_ep_info.args));
+	}
+
+	/*
+	 * A loader that does pass a BL32 entry point decides where BL32 runs,
+	 * so check it against the window this platform firewalls rather than
+	 * assuming the two agree.  Only the entry point is available here (the
+	 * handover carries no BL32 size), so a BL32 that starts inside the
+	 * window but outgrows it is left for BL32 itself to notice.
+	 */
+	if (PLAT_RK_SEC_DRAM_SIZE != 0 && bl32_ep_info.pc != 0 &&
+	    (bl32_ep_info.pc < PLAT_RK_SEC_DRAM_BASE ||
+	     bl32_ep_info.pc >= PLAT_RK_SEC_DRAM_BASE + PLAT_RK_SEC_DRAM_SIZE)) {
+		ERROR("BL32 entry 0x%lx outside the secure DRAM window 0x%x-0x%x\n",
+		      (unsigned long)bl32_ep_info.pc, PLAT_RK_SEC_DRAM_BASE,
+		      PLAT_RK_SEC_DRAM_BASE + PLAT_RK_SEC_DRAM_SIZE);
+		panic();
 	}
 }
 
