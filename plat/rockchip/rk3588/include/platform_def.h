@@ -80,6 +80,9 @@
  * Put BL3-1 at the top of the Trusted RAM
  */
 #define BL31_BASE		(TZRAM_BASE + 0x40000)
+
+/* BL32 (OP-TEE) as placed by the FIT the SPL loads; 0 disables the fallback */
+#define PLAT_RK_BL32_BASE	0x08400000
 #define BL31_LIMIT		(TZRAM_BASE + TZRAM_SIZE)
 
 /*******************************************************************************
