@@ -83,6 +83,8 @@
 
 /* BL32 (OP-TEE) as placed by the FIT the SPL loads; 0 disables the fallback */
 #define PLAT_RK_BL32_BASE	0x08400000
+/* 15 MiB of the 16 MiB reserved window; the last MiB stays non-secure (debug console) */
+#define PLAT_RK_BL32_SIZE	0x00f00000
 #define BL31_LIMIT		(TZRAM_BASE + TZRAM_SIZE)
 
 /*******************************************************************************

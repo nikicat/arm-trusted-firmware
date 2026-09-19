@@ -165,6 +165,14 @@ static void secure_region_init(void)
 	 * OP-TEE uses region 1 to configure its TZDRAM range.
 	 */
 	ddr_alias_rgn_protect(2);
+	/*
+	 * Region 1: BL32 (OP-TEE) at PLAT_RK_BL32_BASE, the index OP-TEE would
+	 * use for its TZDRAM if it programmed the firewall itself.
+	 */
+	dsu_fw_rgn_config(PLAT_RK_BL32_BASE >> 20,
+			  (PLAT_RK_BL32_BASE + PLAT_RK_BL32_SIZE) >> 20, 1);
+	ddr_fw_rgn_config(PLAT_RK_BL32_BASE >> 20,
+			  (PLAT_RK_BL32_BASE + PLAT_RK_BL32_SIZE) >> 20, 1);
 
 	/* Use FIREWALL_SYSMEM_RGN0 to config SRAM_ENTRY code(0~4k of sram) to secure */
 	sram_fw_rgn_config(0, 4, 0);
