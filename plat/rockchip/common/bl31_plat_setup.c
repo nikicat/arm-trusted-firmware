@@ -18,6 +18,10 @@
 #include <plat_private.h>
 #include <plat/common/platform.h>
 
+#ifndef PLAT_RK_BL32_BASE
+#define PLAT_RK_BL32_BASE	0
+#endif
+
 static entry_point_info_t bl32_ep_info;
 static entry_point_info_t bl33_ep_info;
 
@@ -69,6 +73,19 @@ void bl31_early_platform_setup2(u_register_t arg0, u_register_t arg1,
 	VERBOSE("bl31_setup\n");
 
 	bl31_params_parse_helper(arg0, &bl32_ep_info, &bl33_ep_info);
+
+	/*
+	 * Rockchip's SPL loads a FIT "optee" image at its load address but
+	 * passes no BL32 entry point, so OP-TEE never starts. Use the FIT's
+	 * fixed load address when the loader passed nothing.
+	 */
+	if (bl32_ep_info.pc == 0 && PLAT_RK_BL32_BASE != 0) {
+		SET_PARAM_HEAD(&bl32_ep_info, PARAM_EP, VERSION_1, 0);
+		SET_SECURITY_STATE(bl32_ep_info.h.attr, SECURE);
+		bl32_ep_info.pc = PLAT_RK_BL32_BASE;
+		bl32_ep_info.spsr = SPSR_64(MODE_EL1, MODE_SP_ELX,
+					    DISABLE_ALL_EXCEPTIONS);
+	}
 }
 
 /*******************************************************************************
