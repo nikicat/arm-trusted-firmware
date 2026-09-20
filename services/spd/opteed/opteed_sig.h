@@ -13,7 +13,7 @@
 /*
  * Signed OP-TEE image, as handed over with OPTEE_SMC_LOAD_SIGNED=1:
  *   struct opteed_sig_hdr | OP-TEE image (header v2 + images) | 64-byte ed25519
- * signature over everything before it. Little-endian.
+ * signature over the SHA-512 of everything before it. Little-endian.
  */
 struct opteed_sig_hdr {
 	uint8_t magic[8];	/* "OPTEESIG" */

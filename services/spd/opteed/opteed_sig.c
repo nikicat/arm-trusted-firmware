@@ -17,6 +17,7 @@ int opteed_sig_verify(const uint8_t *blob, size_t len, uint32_t min_version,
 {
 	const struct opteed_sig_hdr *hdr = (const struct opteed_sig_hdr *)blob;
 	size_t signed_len;
+	uint8_t digest[64];
 
 	if (len < sizeof(*hdr) + OPTEED_SIG_LEN)
 		return -1;
@@ -25,8 +26,9 @@ int opteed_sig_verify(const uint8_t *blob, size_t len, uint32_t min_version,
 		return -1;
 
 	signed_len = len - OPTEED_SIG_LEN;
-	if (crypto_ed25519_check(blob + signed_len, pubkey, blob,
-				 signed_len) != 0)
+	crypto_sha512(digest, blob, signed_len);
+	if (crypto_ed25519_check(blob + signed_len, pubkey, digest,
+				 sizeof(digest)) != 0)
 		return -2;
 	if (hdr->image_version < min_version)
 		return -3;
