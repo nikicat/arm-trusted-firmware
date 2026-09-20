@@ -42,6 +42,11 @@
 
 #include "opteed_private.h"
 #include "teesmc_opteed.h"
+#if OPTEE_SMC_LOAD_SIGNED
+#include "opteed_sig.h"
+
+extern const uint8_t opteed_sig_pubkey[OPTEED_SIG_PUBKEY_LEN];
+#endif
 
 #if OPTEE_ALLOW_SMC_LOAD
 static struct transfer_list_header __maybe_unused *bl31_tl;
@@ -542,6 +547,52 @@ static int32_t opteed_handle_smc_load(uint64_t data_size, uint64_t data_pa)
 		return rc;
 	}
 
+#if OPTEE_SMC_LOAD_SIGNED
+	/*
+	 * Copy the whole blob into secure memory, drop the non-secure mapping,
+	 * and only then check the signature: what was verified is what runs.
+	 * From here on the staging area stands in for the source buffer, so
+	 * the error paths below unmap it.
+	 */
+	if (data_size > PLAT_OPTEE_STAGING_SIZE) {
+		mmap_remove_dynamic_region(mapped_data_va, data_map_size);
+		return -EINVAL;
+	}
+	rc = mmap_add_dynamic_region(PLAT_OPTEE_STAGING_BASE,
+				     PLAT_OPTEE_STAGING_BASE,
+				     PLAT_OPTEE_STAGING_SIZE,
+				     MT_MEMORY | MT_RW | MT_SECURE);
+	if (rc != 0) {
+		mmap_remove_dynamic_region(mapped_data_va, data_map_size);
+		return rc;
+	}
+	memcpy((void *)PLAT_OPTEE_STAGING_BASE, (void *)data_va, data_size);
+	mmap_remove_dynamic_region(mapped_data_va, data_map_size);
+	mapped_data_va = PLAT_OPTEE_STAGING_BASE;
+	data_map_size = PLAT_OPTEE_STAGING_SIZE;
+
+	{
+		size_t payload_off = 0;
+		size_t payload_len = 0;
+		uint32_t image_version = 0;
+
+		rc = opteed_sig_verify((uint8_t *)PLAT_OPTEE_STAGING_BASE,
+				       data_size, OPTEE_SIG_MIN_VERSION,
+				       opteed_sig_pubkey, &payload_off,
+				       &payload_len, &image_version);
+		if (rc != 0 || payload_len < hdr_size) {
+			ERROR("OP-TEE image rejected (%d)\n", rc);
+			mmap_remove_dynamic_region(mapped_data_va,
+						   data_map_size);
+			return -EACCES;
+		}
+		INFO("OP-TEE image version %u, signature ok\n",
+		     image_version);
+		data_va = PLAT_OPTEE_STAGING_BASE + payload_off;
+		data_size = payload_len;
+	}
+#endif
+
 	image_header = (optee_header_t *)data_va;
 	if (image_header->magic != TEE_MAGIC_NUM_OPTEE ||
 	    image_header->version != 2 || image_header->nb_images != 1) {
@@ -573,6 +624,15 @@ static int32_t opteed_handle_smc_load(uint64_t data_size, uint64_t data_pa)
 
 	image_va = image_pa;
 	target_end_pa = image_pa + image_size;
+
+#if OPTEE_SMC_LOAD_SIGNED
+	/* The image goes where the platform reserved for it and nowhere else */
+	if (image_pa < PLAT_OPTEE_LOAD_BASE ||
+	    target_end_pa > PLAT_OPTEE_LOAD_BASE + PLAT_OPTEE_LOAD_SIZE) {
+		mmap_remove_dynamic_region(mapped_data_va, data_map_size);
+		return -EINVAL;
+	}
+#endif
 
 	/* Now also map the memory we want to copy it to. */
 	target_pa = page_align(image_pa, DOWN);

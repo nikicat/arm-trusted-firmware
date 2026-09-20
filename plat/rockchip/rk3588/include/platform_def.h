@@ -97,6 +97,15 @@
  * non-secure world read whatever BL32 logs there, so it is not the default.
  */
 #define PLAT_RK_SEC_DRAM_SIZE	0x01000000
+/*
+ * Signed SMC load (OPTEE_SMC_LOAD_SIGNED): where a handed-over image may be
+ * placed, and the staging area it is verified in; both inside the firewalled
+ * BL32 window, so the non-secure world cannot touch them.
+ */
+#define PLAT_OPTEE_LOAD_BASE	PLAT_RK_SEC_DRAM_BASE
+#define PLAT_OPTEE_LOAD_SIZE	0x00a00000
+#define PLAT_OPTEE_STAGING_BASE	(PLAT_RK_SEC_DRAM_BASE + PLAT_OPTEE_LOAD_SIZE)
+#define PLAT_OPTEE_STAGING_SIZE	0x00400000
 #define BL31_LIMIT		(TZRAM_BASE + TZRAM_SIZE)
 
 /*******************************************************************************
