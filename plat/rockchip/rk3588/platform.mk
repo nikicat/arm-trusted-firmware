@@ -110,3 +110,13 @@ $(eval $(call add_define,RK3588_SPINOR_LOCK_SR1))
 ifeq (${RK3588_SPINOR_LOCK},1)
 BL31_SOURCES		+=	${RK_PLAT_SOC}/drivers/soc/spinor_lock.c
 endif
+
+# Power-on self-update of the flash from a signed bundle Linux staged
+# (github.com/nikicat/rk3588-fwupd); runs before the SPI NOR lock.
+FWUPD_DIR		?=
+RK3588_FWUPD		:=	0
+ifneq ($(FWUPD_DIR),)
+RK3588_FWUPD		:=	1
+include $(FWUPD_DIR)/tfa/fwupd.mk
+endif
+$(eval $(call add_define,RK3588_FWUPD))

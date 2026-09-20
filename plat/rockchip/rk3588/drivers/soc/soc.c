@@ -24,6 +24,9 @@
 #include <rk3588_clk.h>
 #include <secure.h>
 #include <soc.h>
+#if RK3588_FWUPD
+#include <fwupd_tfa.h>
+#endif
 
 #define RK3588_DEV_RNG0_BASE	0xf0000000
 #define RK3588_DEV_RNG0_SIZE	0x0ffff000
@@ -37,6 +40,10 @@ const mmap_region_t plat_rk_mmap[] = {
 			MT_DEVICE | MT_RW | MT_SECURE),
 	MAP_REGION_FLAT(DDR_SHARE_MEM, DDR_SHARE_SIZE,
 			MT_DEVICE | MT_RW | MT_NS),
+#if RK3588_FWUPD
+	MAP_REGION_FLAT(FWUPD_BUF_BASE, FWUPD_BUF_SIZE,
+			MT_MEMORY | MT_RW | MT_SECURE),
+#endif
 	{ 0 }
 };
 
@@ -145,6 +152,10 @@ void plat_rockchip_soc_init(void)
 	sgrf_init();
 	rockchip_init_scmi_server();
 	init_scmi_mailbox();
+#if RK3588_FWUPD
+	/* may not return: a staged bundle is installed, then the flash is locked and the SoC reset */
+	rk3588_fwupd_run();
+#endif
 #if RK3588_SPINOR_LOCK
 	rk3588_spinor_lock();
 #endif
