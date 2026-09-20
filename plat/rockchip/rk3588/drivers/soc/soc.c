@@ -145,4 +145,7 @@ void plat_rockchip_soc_init(void)
 	sgrf_init();
 	rockchip_init_scmi_server();
 	init_scmi_mailbox();
+#if RK3588_SPINOR_LOCK
+	rk3588_spinor_lock();
+#endif
 }

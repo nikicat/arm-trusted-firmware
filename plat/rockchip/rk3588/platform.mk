@@ -100,3 +100,13 @@ ENABLE_SPE_FOR_LOWER_ELS	:= 0
 PLAT_EXTRA_LD_SCRIPT	:=	1
 TRNG_SUPPORT		:=	1
 $(eval $(call add_define,PLAT_RK_CPU_RESET_EARLY))
+
+# Write-protect the boot firmware in the SPI NOR at every boot (see drivers/soc/spinor_lock.c).
+# SR1 holds the block-protect bits: 0x34 = TB|BP2|BP0, the bottom 4 MiB of a 128 Mbit part.
+RK3588_SPINOR_LOCK	?= 0
+RK3588_SPINOR_LOCK_SR1	?= 0x34
+$(eval $(call add_define,RK3588_SPINOR_LOCK))
+$(eval $(call add_define,RK3588_SPINOR_LOCK_SR1))
+ifeq (${RK3588_SPINOR_LOCK},1)
+BL31_SOURCES		+=	${RK_PLAT_SOC}/drivers/soc/spinor_lock.c
+endif

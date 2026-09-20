@@ -208,4 +208,6 @@ enum pvtm_con0 {
 
 #define MAILBOX_CHANNEL_CNT		4
 
+void rk3588_spinor_lock(void);
+
 #endif /* __SOC_H__ */
